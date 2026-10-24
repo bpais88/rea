@@ -20,6 +20,10 @@ import {
 } from "./composition/optionalObservationProviders.js";
 import { createToolResultDelivery } from "./server/toolResult.js";
 import { createShutdown } from "./main/shutdown.js";
+import {
+  supportsNodeVersion,
+  SUPPORTED_NODE_VERSION_PROSE,
+} from "./domain/runtimeVersion.js";
 
 const runtimeDependencies = (): RuntimeDependencies => ({
   env: process.env,
@@ -50,6 +54,12 @@ const runtimeDependencies = (): RuntimeDependencies => ({
 export const run = async (
   dependencies: RuntimeDependencies = runtimeDependencies(),
 ): Promise<number> => {
+  if (!supportsNodeVersion(process.versions.node)) {
+    dependencies.writeStderr(
+      `Unsupported Node.js ${process.versions.node}. Install ${SUPPORTED_NODE_VERSION_PROSE}.\n`,
+    );
+    return 1;
+  }
   const environment = snapshotEnvironment(dependencies.env);
   const config = parseConfig(environment);
   if (!config.ok) {

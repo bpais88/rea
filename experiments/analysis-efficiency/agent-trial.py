@@ -75,8 +75,8 @@ def main():
     driver_repository = Path(__file__).resolve().parents[2]
     experiment = Path(__file__).resolve().parent
     node = shutil.which('node')
-    if subprocess.check_output([node, '--version'], text=True).strip() != 'v24.18.0':
-        raise SystemExit('Use pinned Node 24.18.0 on PATH')
+    if subprocess.check_output([node, '--version'], text=True).strip() != 'v24.22.1':
+        raise SystemExit('Use pinned Node 24.22.1 on PATH')
     provider_env = {'REA_LOG_LEVEL': 'silent', 'NODE_OPTIONS': '--max-old-space-size=512'}
     if args.providers:
         declared = json.loads(args.providers.read_text())
