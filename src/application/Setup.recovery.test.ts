@@ -9,7 +9,7 @@ import { runSetup } from "./Setup.js";
 import { hostRemediation } from "./SetupHost.js";
 import type { SetupProgressEvent } from "./SetupTypes.js";
 
-describe("setup workflow", () => {
+describe("Bun setup admission", () => {
   it.each([
     { version: "1.4.3", compatibility: "26.12.1", supported: false },
     { version: "1.4.4", compatibility: "26.3.0", supported: true },
@@ -39,6 +39,9 @@ describe("setup workflow", () => {
     },
   );
 
+});
+
+describe("setup workflow", () => {
   it("rejects Node 25 before applying setup actions", async () => {
     const host = new FakeSetupHost();
     host.runtime = { id: "node", version: "25.1.0" };

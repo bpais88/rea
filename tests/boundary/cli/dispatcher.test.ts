@@ -6,7 +6,7 @@ import { describe, expect } from "vitest";
 
 import { workspaceCliTest } from "../../support/cli/workspaceCliFixture.js";
 
-describe("executable dispatcher", () => {
+describe("Bun executable admission", () => {
   workspaceCliTest(
     "rejects affected Bun before every executable adapter",
     async ({ processes }) => {
@@ -34,6 +34,9 @@ describe("executable dispatcher", () => {
     },
   );
 
+});
+
+describe("executable dispatcher", () => {
   workspaceCliTest(
     "rejects vulnerable runtimes before CLI or MCP starts",
     async ({ processes }) => {
