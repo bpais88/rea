@@ -43,7 +43,9 @@ describe("curl installer scenarios", { timeout: 20_000 }, () => {
     expect(await readFile(fixture.reaLog, "utf8")).toBe("--version\n");
     expect(await readdir(fixture.temporary)).toEqual([]);
   });
+});
 
+describe("installer Node runtime compatibility", { timeout: 20_000 }, () => {
   it.each([
     "22.23.4",
     "22.24.0",
@@ -90,7 +92,9 @@ describe("curl installer scenarios", { timeout: 20_000 }, () => {
       code: "ENOENT",
     });
   });
+});
 
+describe("installer release and failure handling", { timeout: 20_000 }, () => {
   it("resolves and validates the latest REA release tag", async () => {
     const fixture = await createFixture();
     const result = await runInstaller(fixture);
