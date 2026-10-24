@@ -44,7 +44,16 @@ describe("curl installer scenarios", { timeout: 20_000 }, () => {
     expect(await readdir(fixture.temporary)).toEqual([]);
   });
 
-  it.each(["22.23.4", "22.24.0", "24.22.1", "24.23.0", "26.12.1", "26.13.0", "27.0.0", "24.22.1+vendor.1"])(
+  it.each([
+    "22.23.4",
+    "22.24.0",
+    "24.22.1",
+    "24.23.0",
+    "26.12.1",
+    "26.13.0",
+    "27.0.0",
+    "24.22.1+vendor.1",
+  ])(
     "accepts supported Node %s without installing or replacing it",
     async (version) => {
       const fixture = await createFixture();
@@ -59,22 +68,28 @@ describe("curl installer scenarios", { timeout: 20_000 }, () => {
     },
   );
 
-  it.each(["22.18.9", "22.23.3", "24.10.9", "24.22.0", "23.0.0", "25.0.0", "26.12.0", "26.12.1-rc.1"])(
-    "rejects unsupported Node %s before invoking npm",
-    async (version) => {
-      const fixture = await createFixture();
-      await expect(
-        runInstaller(fixture, ["--version", "0.3.0"], {
-          FAKE_NODE_VERSION: version,
-        }),
-      ).rejects.toMatchObject({
-        stderr: expect.stringContaining(`Node.js ${version} is unsupported`),
-      });
-      await expect(readFile(fixture.npmLog, "utf8")).rejects.toMatchObject({
-        code: "ENOENT",
-      });
-    },
-  );
+  it.each([
+    "22.18.9",
+    "22.23.3",
+    "24.10.9",
+    "24.22.0",
+    "23.0.0",
+    "25.0.0",
+    "26.12.0",
+    "26.12.1-rc.1",
+  ])("rejects unsupported Node %s before invoking npm", async (version) => {
+    const fixture = await createFixture();
+    await expect(
+      runInstaller(fixture, ["--version", "0.3.0"], {
+        FAKE_NODE_VERSION: version,
+      }),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining(`Node.js ${version} is unsupported`),
+    });
+    await expect(readFile(fixture.npmLog, "utf8")).rejects.toMatchObject({
+      code: "ENOENT",
+    });
+  });
 
   it("resolves and validates the latest REA release tag", async () => {
     const fixture = await createFixture();
