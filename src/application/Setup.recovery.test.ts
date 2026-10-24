@@ -38,7 +38,6 @@ describe("Bun setup admission", () => {
       }
     },
   );
-
 });
 
 describe("setup workflow", () => {

@@ -33,7 +33,6 @@ describe("Bun executable admission", () => {
       }
     },
   );
-
 });
 
 describe("executable dispatcher", () => {
