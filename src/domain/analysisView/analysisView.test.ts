@@ -959,9 +959,11 @@ it("does not impose a message-count cutoff below the byte budget", () => {
     { length: 100 },
     (_, index) => `message ${index}`,
   );
+  // Messages are canonically ordered, so message 10 precedes message 2.
+  // Assert the entire set survives without requiring numeric insertion order.
   expect(
     boundedViewMessages(messages, `ev_${"a".repeat(64)}`, "limitations"),
-  ).toEqual(messages);
+  ).toEqual([...messages].sort());
 });
 
 it("bounds repeated view messages even when fewer than 64 source strings are huge", () => {
