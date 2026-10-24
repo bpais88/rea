@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { javaScriptRuntime, supportsNodeVersion } from "./runtimeVersion.js";
+import {
+  javaScriptRuntime,
+  supportsNodeVersion,
+  supportsJavaScriptRuntime,
+  unsupportedRuntimeMessage,
+} from "./runtimeVersion.js";
 
 describe("supported Node.js versions", () => {
   it.each([
@@ -46,4 +51,25 @@ describe("JavaScript runtime identity", () => {
       nodeCompatibilityVersion: "26.3.0",
     });
   });
+});
+
+describe("runtime-specific security admission", () => {
+  it.each([
+    ["1.4.3", "26.12.1", false],
+    ["1.4.4", "26.3.0", true],
+    ["1.5.0", "26.3.0", true],
+    ["1.4.4-rc.1", "26.12.1", false],
+    ["invalid", "26.12.1", false],
+    ["1.4.4", "25.1.0", false],
+  ])(
+    "checks Bun %s independently of compatibility %s",
+    (bun, node, expected) => {
+      expect(supportsJavaScriptRuntime(javaScriptRuntime({ bun, node }))).toBe(
+        expected,
+      );
+      expect(unsupportedRuntimeMessage({ bun, node }) === undefined).toBe(
+        expected,
+      );
+    },
+  );
 });

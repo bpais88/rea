@@ -6,12 +6,42 @@ import { ConfigurationError } from "../domain/configurationErrors.js";
 import { SUPPORTED_NODE_VERSION_PROSE } from "../domain/runtimeVersion.js";
 import { FakeSetupHost, options } from "./Setup.fixture.js";
 import { runSetup } from "./Setup.js";
+import { hostRemediation } from "./SetupHost.js";
 import type { SetupProgressEvent } from "./SetupTypes.js";
 
 describe("setup workflow", () => {
+  it.each([
+    { version: "1.4.3", compatibility: "26.12.1", supported: false },
+    { version: "1.4.4", compatibility: "26.3.0", supported: true },
+  ])(
+    "checks actual Bun $version before setup effects",
+    async ({ version, compatibility, supported }) => {
+      const host = new FakeSetupHost();
+      host.runtime = {
+        id: "bun",
+        version,
+        nodeCompatibilityVersion: compatibility,
+      };
+      expect((await hostRemediation(host, false)) === undefined).toBe(
+        supported,
+      );
+      if (!supported) {
+        const result = await runSetup(
+          { ...options(true, true), installSkill: true },
+          host,
+        );
+        expect(result.status).toBe("needs_human");
+        expect(result.appliedActions).toEqual([]);
+        expect(
+          host.hopperInstalls + host.configurations + host.skillInstalls,
+        ).toBe(0);
+      }
+    },
+  );
+
   it("rejects Node 25 before applying setup actions", async () => {
     const host = new FakeSetupHost();
-    host.nodeVersion = "25.1.0";
+    host.runtime = { id: "node", version: "25.1.0" };
     host.clients = [{ name: "codex", configPath: "/codex.toml" }];
 
     const result = await runSetup(
@@ -242,7 +272,7 @@ describe("setup scoped readiness", () => {
     expect(platformHost.configurations).toBe(1);
 
     const nodeHost = new FakeSetupHost();
-    nodeHost.nodeVersion = "20.0.0";
+    nodeHost.runtime = { id: "node", version: "20.0.0" };
     expect((await runSetup(options(true), nodeHost)).remediation).toBe(
       `Install ${SUPPORTED_NODE_VERSION_PROSE} and rerun setup.`,
     );

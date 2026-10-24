@@ -25,18 +25,18 @@ describe("doctor runtime check", () => {
   });
 
   it.each([
-    { compatibility: "26.3.0", ok: false },
-    { compatibility: "26.12.1", ok: true },
-    { compatibility: "25.1.0", ok: false },
+    { version: "1.4.3", compatibility: "26.12.1", ok: false },
+    { version: "1.4.4", compatibility: "26.3.0", ok: true },
+    { version: "1.4.4", compatibility: "25.1.0", ok: false },
   ])(
-    "identifies Bun and admits it by Node.js compatibility $compatibility",
-    async ({ compatibility, ok }) => {
+    "checks Bun $version separately from Node.js compatibility $compatibility",
+    async ({ version, compatibility, ok }) => {
       const result = await runDoctor(
         undefined,
         host({
           runtime: {
             id: "bun",
-            version: "1.4.2",
+            version,
             nodeCompatibilityVersion: compatibility,
           },
         }),
@@ -49,7 +49,7 @@ describe("doctor runtime check", () => {
           classification: ok ? "healthy" : "missing_dependency",
           details: {
             runtime: "bun",
-            version: "1.4.2",
+            version,
             node_compatibility_version: compatibility,
           },
         }),

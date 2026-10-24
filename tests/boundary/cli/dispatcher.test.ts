@@ -8,6 +8,33 @@ import { workspaceCliTest } from "../../support/cli/workspaceCliFixture.js";
 
 describe("executable dispatcher", () => {
   workspaceCliTest(
+    "rejects affected Bun before every executable adapter",
+    async ({ processes }) => {
+      for (const mode of [
+        "--version",
+        "mcp",
+        "--mcp",
+        "mcp-doctor",
+        "direct",
+      ]) {
+        const args = mode === "mcp-doctor" ? ["mcp", "doctor"] : [mode];
+        const entry =
+          mode === "direct"
+            ? `process.argv = ["node"]; process.exitCode = await (await import(${JSON.stringify(pathToFileURL(resolve("dist/main.js")).href)})).run();`
+            : `process.argv = ["node", "rea", ...${JSON.stringify(args)}]; await import(${JSON.stringify(pathToFileURL(resolve("scripts/rea.mjs")).href)});`;
+        const result = await processes.run(process.execPath, [
+          "--input-type=module",
+          "--eval",
+          `Object.defineProperty(process.versions, 'bun', {value: '1.4.3'}); Object.defineProperty(process.versions, 'node', {value: '26.12.1'}); ${entry}`,
+        ]);
+        expect(result.exitCode).toBe(1);
+        expect(result.stdout).toBe("");
+        expect(result.stderr).toContain("Unsupported Bun 1.4.3");
+      }
+    },
+  );
+
+  workspaceCliTest(
     "rejects vulnerable runtimes before CLI or MCP starts",
     async ({ processes }) => {
       const dispatcher = pathToFileURL(resolve("scripts/rea.mjs")).href;
@@ -49,7 +76,7 @@ describe("executable dispatcher", () => {
         copyFile("scripts/rea.mjs", join(scripts, "rea.mjs")),
         workspace.write(
           "dist/domain/runtimeVersion.js",
-          "export const supportsNodeVersion = () => true;\n",
+          "export const unsupportedRuntimeMessage = () => undefined;\n",
         ),
         workspace.write(
           "package.json",
