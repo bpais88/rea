@@ -12,7 +12,7 @@ export const supportsNodeVersion = (version: string): boolean =>
   satisfies(version, SUPPORTED_NODE_VERSION_RANGE);
 
 /** Bun's decoder is independent of the Node API version it advertises. */
-export const SUPPORTED_BUN_VERSION_RANGE = ">=1.4.4";
+const SUPPORTED_BUN_VERSION_RANGE = ">=1.4.4";
 const BUN_NODE_COMPATIBILITY_RANGE = "^22.19.0 || ^24.11.0 || >=26.0.0";
 
 /** JavaScript runtime executing REA. Bun also reports a Node.js compatibility version. */
