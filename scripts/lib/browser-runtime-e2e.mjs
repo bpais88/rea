@@ -1,3 +1,4 @@
+import { listBrowserTargetsInputSchema } from "../../dist/domain/browserObservation.js";
 import assert from "node:assert/strict";
 import { spawn, execFile } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -45,10 +46,12 @@ export async function verifyBrowserRuntime(
   try {
     fixture = await startRuntimeFixtureBrowser(executable, site.origin);
     const endpoint = `http://127.0.0.1:${fixture.port}`;
-    const targets = await new CdpBrowserProvider().listTargets({
-      cdp_endpoint: endpoint,
-      allowed_origins: [site.origin],
-    });
+    const targets = await new CdpBrowserProvider().listTargets(
+      listBrowserTargetsInputSchema.parse({
+        cdp_endpoint: endpoint,
+        allowed_origins: [site.origin],
+      }),
+    );
     if (!targets.ok) throw targets.error;
     const target = targets.value.targets[0];
     assert.ok(target, "owned fixture page target missing");

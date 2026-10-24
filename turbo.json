@@ -63,6 +63,8 @@
         "!docs/.vitepress/dist/**",
         "!website/_site/**",
         "!experiments/analysis-efficiency/results/**",
+        "stryker.config.mjs",
+        "stryker.semantics.config.mjs",
         "vitest.reverse-tools.config.ts",
         "vitest.reverse-tools-semantics.config.ts",
         "vitest.config.ts"
@@ -86,6 +88,8 @@
         "!docs/.vitepress/dist/**",
         "!website/_site/**",
         "!experiments/analysis-efficiency/results/**",
+        "stryker.config.mjs",
+        "stryker.semantics.config.mjs",
         "vitest.reverse-tools.config.ts",
         "vitest.reverse-tools-semantics.config.ts",
         "vitest.config.ts"
