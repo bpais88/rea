@@ -20,6 +20,7 @@ import {
 } from "./composition/optionalObservationProviders.js";
 import { createToolResultDelivery } from "./server/toolResult.js";
 import { createShutdown } from "./main/shutdown.js";
+import { unsupportedRuntimeMessage } from "./domain/runtimeVersion.js";
 
 const runtimeDependencies = (): RuntimeDependencies => ({
   env: process.env,
@@ -50,6 +51,11 @@ const runtimeDependencies = (): RuntimeDependencies => ({
 export const run = async (
   dependencies: RuntimeDependencies = runtimeDependencies(),
 ): Promise<number> => {
+  const runtimeError = unsupportedRuntimeMessage(process.versions);
+  if (runtimeError !== undefined) {
+    dependencies.writeStderr(runtimeError);
+    return 1;
+  }
   const environment = snapshotEnvironment(dependencies.env);
   const config = parseConfig(environment);
   if (!config.ok) {

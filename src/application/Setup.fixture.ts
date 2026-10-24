@@ -1,3 +1,4 @@
+import type { JavaScriptRuntime } from "../domain/runtimeVersion.js";
 import { skillDestinations } from "./SetupSkill.js";
 import type {
   ClientConfigurationInspection,
@@ -26,7 +27,7 @@ export class FakeSetupHost implements SetupHost {
   }
   readonly registrationCommand: readonly string[];
   registrationCommandBlocker?: string;
-  nodeVersion = "24.18.0";
+  runtime: JavaScriptRuntime = { id: "node", version: "24.22.1" };
   version: string | undefined = "14.5";
   distribution: LinuxDistribution | undefined;
   hopper: string | undefined;

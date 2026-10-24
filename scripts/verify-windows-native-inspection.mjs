@@ -5,6 +5,7 @@ import {
   mkdir,
   mkdtemp,
   readdir,
+  readFile,
   rm,
   symlink,
   writeFile,
@@ -52,7 +53,7 @@ try {
     join(workspace, "dist", "windows", "WindowsNativeLoader.js"),
   ).href;
   const source = `import assert from 'node:assert/strict';
-import {readdirSync,renameSync,statSync} from 'node:fs';
+import {mkdirSync,readFileSync,readdirSync,renameSync,statSync,writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {systemWindowsNativeAuthority} from ${JSON.stringify(loader)};
 const temp=process.env.TEMP;
@@ -62,14 +63,17 @@ assert.equal(first.retryable,true);
 assert.match(first.reason,/Delete owned object by handle failed.*Win32 5/s);
 const [name,...extra]=readdirSync(temp);assert.ok(name);assert.equal(extra.length,0);
 const path=join(temp,name);const identity=statSync(path,{bigint:true});
-assert.throws(()=>renameSync(path,path+'-replacement'));
-assert.equal(statSync(path,{bigint:true}).ino,identity.ino);
+// Directory leases allow rename; ownership is the retained handle, not the pathname.
+const moved=path+'-moved';renameSync(path,moved);
+assert.equal(statSync(moved,{bigint:true}).ino,identity.ino);
+mkdirSync(path);writeFileSync(join(path,'unrelated'),'preserve');
 if(process.argv[2]!=='teardown'){
  const second=systemWindowsNativeAuthority();assert.equal(second.available,true);
- assert.equal(readdirSync(temp).length,0);
+ assert.deepEqual(readdirSync(temp),[name]);
+ assert.equal(readFileSync(join(path,'unrelated'),'utf8'),'preserve');
  assert.equal(systemWindowsNativeAuthority(),second);
 }
-console.log(JSON.stringify({mode:process.argv[2],firstFailed:true,retainedOwner:true,inode:identity.ino.toString()}));
+console.log(JSON.stringify({mode:process.argv[2],firstFailed:true,retainedOwner:true,replacement:name,inode:identity.ino.toString()}));
 `;
   const fixture = join(workspace, "probe.mjs");
   await writeFile(fixture, source);
@@ -85,7 +89,11 @@ console.log(JSON.stringify({mode:process.argv[2],firstFailed:true,retainedOwner:
       }),
     );
     assert.equal(observed.retainedOwner, true);
-    assert.deepEqual(await readdir(temp), []);
+    assert.deepEqual(await readdir(temp), [observed.replacement]);
+    assert.equal(
+      await readFile(join(temp, observed.replacement, "unrelated"), "utf8"),
+      "preserve",
+    );
   }
   process.stdout.write(
     `${JSON.stringify({ ok: true, controlledDispositionFailure: true, retainedOwner: true, retryRecovers: true, successfulAdmissionCached: true, environmentTeardownCleansProbe: true, issue1701HostCauseReproduced: false })}\n`,

@@ -122,7 +122,7 @@ For a CLI installed with `npm install --global` or `bun add --global`:
 rea update
 ```
 
-Bun global updates require Bun 1.2.17 or later. With an older Bun release,
+Running REA with Bun requires Bun 1.4.4 or later. With an older Bun release,
 upgrade Bun manually before running `rea update`.
 
 To refresh your agent registrations and skill, run the setup command printed
@@ -153,7 +153,7 @@ CLI commands use the same workflows.
 
 ## What you can analyze
 
-REA requires Node.js 22.x (>=22.19), 24.x (>=24.11), or 26+, plus npm.
+REA requires Node.js 22.x (>=22.23.4), 24.x (>=24.22.1), or 26.12.1+, plus npm.
 Additional tools and host support depend on the target:
 
 | Target                 | What REA returns                                                                     | Requirements and guide                                                                                                                |

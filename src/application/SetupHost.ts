@@ -11,8 +11,8 @@ import {
   type PackageRunner,
 } from "./ClientRegistrationIdentity.js";
 import {
-  SUPPORTED_NODE_VERSION_PROSE,
-  supportsNodeVersion,
+  runtimeVersionRequirement,
+  supportsJavaScriptRuntime,
 } from "../domain/runtimeVersion.js";
 import { runDoctor, systemDoctorHost, type DoctorHost } from "./Doctor.js";
 import {
@@ -113,8 +113,8 @@ export const hostRemediation = async (
   host: SetupHost,
   installHopper: boolean,
 ): Promise<string | undefined> => {
-  if (!supportsNodeVersion(host.nodeVersion))
-    return `Install ${SUPPORTED_NODE_VERSION_PROSE} and rerun setup.`;
+  if (!supportsJavaScriptRuntime(host.runtime))
+    return `Install ${runtimeVersionRequirement(host.runtime)} and rerun setup.`;
   if (!installHopper) return undefined;
   if (host.platform !== "darwin" && host.platform !== "linux")
     return "REA supports Hopper on macOS and selected 64-bit Linux distributions.";
@@ -148,7 +148,7 @@ export const systemSetupHost = (
     skillDestinations: (clientIds) =>
       skillDestinations(homeDirectory, clientIds, environment, platform),
     ...setupRegistration(platform, homeDirectory, environment),
-    nodeVersion: process.versions.node,
+    runtime: doctorHost.runtime,
     macosVersion: () => doctorHost.macosVersion(),
     linuxDistribution: readLinuxDistribution,
     close: () => closeSetupResources(resources, macHopperHost, doctorHost),

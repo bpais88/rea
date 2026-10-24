@@ -1,11 +1,71 @@
 import { copyFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 import { describe, expect } from "vitest";
 
 import { workspaceCliTest } from "../../support/cli/workspaceCliFixture.js";
 
+describe("Bun executable admission", () => {
+  workspaceCliTest(
+    "rejects affected Bun before every executable adapter",
+    async ({ processes }) => {
+      for (const mode of [
+        "--version",
+        "mcp",
+        "--mcp",
+        "mcp-doctor",
+        "direct",
+      ]) {
+        const args = mode === "mcp-doctor" ? ["mcp", "doctor"] : [mode];
+        const entry =
+          mode === "direct"
+            ? `process.argv = ["node"]; process.exitCode = await (await import(${JSON.stringify(pathToFileURL(resolve("dist/main.js")).href)})).run();`
+            : `process.argv = ["node", "rea", ...${JSON.stringify(args)}]; await import(${JSON.stringify(pathToFileURL(resolve("scripts/rea.mjs")).href)});`;
+        const result = await processes.run(process.execPath, [
+          "--input-type=module",
+          "--eval",
+          `Object.defineProperty(process.versions, 'bun', {value: '1.4.3'}); Object.defineProperty(process.versions, 'node', {value: '26.12.1'}); ${entry}`,
+        ]);
+        expect(result.exitCode).toBe(1);
+        expect(result.stdout).toBe("");
+        expect(result.stderr).toContain("Unsupported Bun 1.4.3");
+      }
+    },
+  );
+});
+
 describe("executable dispatcher", () => {
+  workspaceCliTest(
+    "rejects vulnerable runtimes before CLI or MCP starts",
+    async ({ processes }) => {
+      const dispatcher = pathToFileURL(resolve("scripts/rea.mjs")).href;
+      for (const version of ["22.23.3", "24.22.0", "26.12.0", "24.22.1-rc.1"]) {
+        for (const mode of [
+          "--version",
+          "mcp",
+          "--mcp",
+          "mcp-doctor",
+          "direct",
+        ]) {
+          const args = mode === "mcp-doctor" ? ["mcp", "doctor"] : [mode];
+          const entry =
+            mode === "direct"
+              ? `process.argv = ["node"]; process.exitCode = await (await import(${JSON.stringify(pathToFileURL(resolve("dist/main.js")).href)})).run();`
+              : `process.argv = ["node", "rea", ...${JSON.stringify(args)}]; await import(${JSON.stringify(dispatcher)});`;
+          const result = await processes.run(process.execPath, [
+            "--input-type=module",
+            "--eval",
+            `Object.defineProperty(process.versions, 'node', {value: ${JSON.stringify(version)}}); ${entry}`,
+          ]);
+          expect(result.exitCode).toBe(1);
+          expect(result.stdout).toBe("");
+          expect(result.stderr).toContain(`Unsupported Node.js ${version}`);
+        }
+      }
+    },
+  );
+
   workspaceCliTest(
     "reserves production MCP routing for bare mode arguments",
     async ({ processes, workspace }) => {
@@ -13,8 +73,13 @@ describe("executable dispatcher", () => {
       await workspace.mkdir("dist");
       await workspace.mkdir("dist/cli-runtime");
       await workspace.mkdir("dist/mcp");
+      await workspace.mkdir("dist/domain");
       await Promise.all([
         copyFile("scripts/rea.mjs", join(scripts, "rea.mjs")),
+        workspace.write(
+          "dist/domain/runtimeVersion.js",
+          "export const unsupportedRuntimeMessage = () => undefined;\n",
+        ),
         workspace.write(
           "package.json",
           JSON.stringify({ type: "module", version: "1.0.0" }),

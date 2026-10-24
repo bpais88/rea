@@ -46,10 +46,22 @@ const runtimeFiles = isMcpMode
         "dist/cli-runtime/cliResultOutput.js",
       ];
 
-if (!(await compiledRuntimeExists(runtimeFiles))) {
+runtimeFiles.push("dist/domain/runtimeVersion.js");
+
+const hasCompiledRuntime = await compiledRuntimeExists(runtimeFiles);
+const runtimeError = hasCompiledRuntime
+  ? (
+      await import("../dist/domain/runtimeVersion.js")
+    ).unsupportedRuntimeMessage(process.versions)
+  : undefined;
+
+if (!hasCompiledRuntime) {
   process.stderr.write(
     `REA's compiled runtime is missing. Run \`npm ci && npm run build:cached\` in ${packageRoot} to install dependencies and build REA, then restart it. If this is an installed package, reinstall rea-agents.\n`,
   );
+  process.exitCode = 1;
+} else if (runtimeError !== undefined) {
+  process.stderr.write(runtimeError);
   process.exitCode = 1;
 } else if (isMcpMode) {
   const { runEntrypoint } = await import("../dist/mcp/main.js");

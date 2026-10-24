@@ -1,3 +1,4 @@
+import type { JavaScriptRuntime } from "../domain/runtimeVersion.js";
 import type { DoctorReport, DoctorScope, runDoctor } from "./Doctor.js";
 import type { LinuxDistribution } from "./LinuxHopper.js";
 import type { SkillDestination, SkillInstallResult } from "./SetupSkill.js";
@@ -62,7 +63,7 @@ export interface SetupHost {
   readonly registrationCommand: readonly string[];
   /** Why no client may be registered with `registrationCommand` from this host. */
   readonly registrationCommandBlocker?: string;
-  readonly nodeVersion: string;
+  readonly runtime: JavaScriptRuntime;
   macosVersion(): Promise<string | undefined>;
   linuxDistribution(): Promise<LinuxDistribution | undefined>;
   initialSetupState(scope?: DoctorScope): Promise<SetupInitialState>;
